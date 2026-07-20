@@ -31,6 +31,7 @@
     "test": "npm run build && node --test tests/get-project-info.test.mjs",
     "inspector": "npx @modelcontextprotocol/inspector build/index.js",
     "prepare": "npm run build",
+    "test": "npm run build && node --test tests/project-files.test.mjs",
     "watch": "tsc --watch"
   },
   "dependencies": {
