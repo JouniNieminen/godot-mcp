@@ -63,20 +63,60 @@ Godot MCP enables AI agents to launch the Godot editor, run projects, capture de
 
 - **Launch Godot Editor**: Open the Godot editor for a specific project
 - **Run Godot Projects**: Execute Godot projects in debug mode
+- **Run Godot Scenes**: Execute a specific scene with configurable timeout and captured output
 - **Capture Debug Output**: Retrieve console output and error messages
 - **Control Execution**: Start and stop Godot projects programmatically
 - **Get Godot Version**: Retrieve the installed Godot version
 - **List Godot Projects**: Find Godot projects in a specified directory
 - **Project Analysis**: Get detailed information about project structure
+- **Project File Discovery**: Enumerate scenes, scripts, resources, and shaders with optional filters
 - **Scene Management**:
   - Create new scenes with specified root node types
   - Add nodes to existing scenes with customizable properties
   - Load sprites and textures into Sprite2D nodes
+    - Texture files must be valid Godot-loadable image resources
+    - Newly added or generated image files may need to be imported by Godot before `load_sprite` can use them
   - Export 3D scenes as MeshLibrary resources for GridMap
   - Save scenes with options for creating variants
 - **UID Management** (for Godot 4.4+):
   - Get UID for specific files
   - Update UID references by resaving resources
+
+### List Project Files
+
+Use `list_project_files` to inspect a project's Godot-relevant files without direct filesystem access. Paths are returned relative to the project, `.godot/` metadata is ignored, and shader files are grouped with resources.
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `projectPath` | Yes | Path to the directory containing `project.godot` |
+| `pattern` | No | Project-relative glob such as `enemies/**` or `**/*.tscn` |
+| `type` | No | `scene`, `script`, `resource`, or `all` (default) |
+
+```json
+{
+  "projectPath": "/path/to/project",
+  "pattern": "actors/**",
+  "type": "script"
+}
+```
+
+### Run a Specific Scene
+
+Use `run_scene` for an F6-style run of one scene while keeping output compatible with `get_debug_output` and `stop_project`.
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `projectPath` | Yes | Path to the directory containing `project.godot` |
+| `scenePath` | Yes | A `res://` path or path relative to the project; `.tscn` and `.scn` are supported |
+| `timeoutMs` | No | Stops the scene automatically after this many milliseconds; defaults to `30000` |
+
+```json
+{
+  "projectPath": "/path/to/project",
+  "scenePath": "res://tests/smoke_test.tscn",
+  "timeoutMs": 30000
+}
+```
 
 ## Requirements
 
@@ -118,11 +158,13 @@ Add to your Cline MCP settings file (`~/Library/Application Support/Code/User/gl
       "autoApprove": [
         "launch_editor",
         "run_project",
+        "run_scene",
         "get_debug_output",
         "stop_project",
         "get_godot_version",
         "list_projects",
         "get_project_info",
+        "list_project_files",
         "create_scene",
         "add_node",
         "load_sprite",
@@ -231,6 +273,10 @@ The bundled script accepts operation type and parameters as JSON, allowing for f
 - **Connection Issues**: Ensure the server is running and restart your AI assistant
 - **Invalid Project Path**: Ensure the path points to a directory containing a `project.godot` file
 - **Build Issues**: Make sure all dependencies are installed by running `npm install`
+- **`load_sprite` fails with `No loader found for resource`**:
+  - Verify the image file is not corrupt
+  - Make sure the format is supported by your Godot import pipeline
+  - If the image was newly added or generated outside the editor, run a Godot import pass before calling `load_sprite`
 
 <details>
 <summary><strong>Cursor-Specific Issues</strong></summary>
